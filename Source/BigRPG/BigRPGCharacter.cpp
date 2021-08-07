@@ -22,9 +22,9 @@ ABigRPGCharacter::ABigRPGCharacter()
 	BaseLookUpRate = 45.f;
 
 	// Don't rotate when the controller rotates. Let that just affect the camera.
-	bUseControllerRotationPitch = false;
-	bUseControllerRotationYaw = false;
-	bUseControllerRotationRoll = false;
+	bUseControllerRotationPitch = true;
+	bUseControllerRotationYaw = true;
+	bUseControllerRotationRoll = true;
 
 	// Configure character movement
 	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
@@ -63,7 +63,7 @@ void ABigRPGCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
 	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
-	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
+	PlayerInputComponent->BindAxis("Turn", this, &ABigRPGCharacter::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("TurnRate", this, &ABigRPGCharacter::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &ABigRPGCharacter::LookUpAtRate);
@@ -126,7 +126,7 @@ void ABigRPGCharacter::MoveForward(float Value)
 
 void ABigRPGCharacter::MoveRight(float Value)
 {
-	if ( (Controller != nullptr) && (Value != 0.0f) )
+	if ( /*(!GetCharacterMovement()->IsFalling()) && */(Controller != nullptr) && (Value != 0.0f) )
 	{
 		// find out which way is right
 		const FRotator Rotation = Controller->GetControlRotation();
@@ -136,5 +136,14 @@ void ABigRPGCharacter::MoveRight(float Value)
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		// add movement in that direction
 		AddMovementInput(Direction, Value);
+	}
+}
+
+void ABigRPGCharacter::CamRotation(float Val)
+{
+	if (Val != 0.f && Controller && Controller->IsLocalPlayerController())
+	{
+		APlayerController* const PC = CastChecked<APlayerController>(Controller);
+		PC->AddYawInput(Val);
 	}
 }
